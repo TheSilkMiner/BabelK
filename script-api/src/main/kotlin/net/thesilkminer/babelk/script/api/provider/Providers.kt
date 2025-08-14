@@ -40,3 +40,6 @@ fun <T : NamedObject> NamedObjectProvider(creator: () -> T): NamedObjectProvider
 fun <T : NamedObject> NamedObjectProvider(name: String, memoize: Boolean = true, creator: () -> T): NamedObjectProvider<T> {
     return if (memoize) SimpleWithNameMemoizedNamedObjectProvider(name, creator) else SimpleWithNameNamedObjectProvider(name, creator)
 }
+
+val <T> Provider<T>.nameOrNull: String?
+    get() = if (this is NamedObjectProvider<T>) this.name else null
