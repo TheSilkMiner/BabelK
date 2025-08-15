@@ -1,0 +1,8 @@
+package net.thesilkminer.babelk.script.api.grammar
+
+import net.thesilkminer.babelk.script.api.collection.MutableNamedObjectCollection
+
+interface ThisGrammar : Grammar {
+    override val rules: MutableNamedObjectCollection<NamedRule, Rule>
+    val pack: GrammarPack
+}
