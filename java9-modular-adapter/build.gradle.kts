@@ -25,8 +25,6 @@ dependencies {
     implementation(kotlin("scripting-jvm-host"))
     implementation(kotlin("script-runtime"))
 
-    implementation(libs.kotlin.logging.jvm)
-
     implementation(group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core-jvm", version = "1.8.0")
 
     implementation(project(":script-api"))

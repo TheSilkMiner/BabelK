@@ -16,6 +16,4 @@ module net.thesilkminer.babelk.java9adapter {
     requires kotlin.scripting.common;
     requires kotlin.scripting.jvm;
     requires kotlin.scripting.jvm.host;
-
-    requires io.github.oshai.kotlinlogging;
 }

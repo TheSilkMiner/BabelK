@@ -11,8 +11,6 @@ multiRelease {
 }
 
 dependencies {
-    implementation(libs.kotlin.logging.jvm)
-
     implementation(project(":java9-modular-adapter"))
     implementation(project(":script-api"))
     implementation(project(":script-host"))
