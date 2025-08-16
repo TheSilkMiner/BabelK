@@ -13,7 +13,7 @@ group = "net.thesilkminer.babelk"
 kotlin {
     jvmToolchain(8)
     compilerOptions {
-        this.moduleName = provider { project.name }
+        this.moduleName = provider { "${project.group}.${project.name}" }
         freeCompilerArgs.add("-Xcontext-parameters")
     }
 }
