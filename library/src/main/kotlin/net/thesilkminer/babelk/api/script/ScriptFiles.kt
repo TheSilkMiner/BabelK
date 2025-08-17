@@ -10,11 +10,13 @@ import kotlin.io.path.bufferedReader
 import kotlin.io.path.readText
 
 private class ReaderProviderBasedScriptFile(override val name: String, private val readerProvider: () -> Reader) : ScriptFile {
+    override val location: Path? = null
     override val contentsReader: Reader get() = this.readerProvider()
     override fun toString(): String = "ScriptFile[${this.name} via reader]"
 }
 
 private class PathBasedScriptFile(private val path: Path, private val charset: Charset, override val name: String) : ScriptFile {
+    override val location: Path get() = this.path
     override val contentsReader: Reader get() = this.path.bufferedReader(this.charset, options = arrayOf(StandardOpenOption.READ))
     override val fullContents: String get() = this.path.readText(this.charset)
     override fun toString(): String = "ScriptFile[${this.name} via ${this.path}]"
