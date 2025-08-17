@@ -15,3 +15,9 @@ dependencies {
     implementation(project(":script-api"))
     implementation(project(":script-host"))
 }
+
+tasks.named<JavaCompile>(sourceSets["java9"].compileJavaTaskName) {
+    sourceSets.main
+        .map { it.output.classesDirs.files.joinToString(prefix = "${project.group}=", separator = File.pathSeparator) }
+        .let { options.compilerArgumentProviders.add { listOf("--patch-module", it.get()) }}
+}
