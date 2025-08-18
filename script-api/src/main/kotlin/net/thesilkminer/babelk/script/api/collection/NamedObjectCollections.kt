@@ -7,6 +7,7 @@ import net.thesilkminer.babelk.script.api.provider.NamedObjectProvider
 
 private class ReadOnlyViewNamedObjectCollection<E : NamedObject>(private val collection: NamedObjectCollection<E>) : NamedObjectCollection<E> {
     override fun byName(name: String): NamedObjectProvider<E> = this.collection.byName(name)
+    override fun toString(): String = this.collection.toString()
 }
 
 fun <E : NamedObject> NamedObjectCollection<E>.asReadOnlyView(): NamedObjectCollection<E> {
