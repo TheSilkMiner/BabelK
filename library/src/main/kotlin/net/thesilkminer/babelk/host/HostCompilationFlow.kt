@@ -23,5 +23,5 @@ internal fun ScriptBundle.compile(): GrammarPack {
 
 private fun ScriptCollection.compileAndEval(): ScriptGrammarPack {
     logger.info { "Compiling and evaluating script collection" }
-    return compileAndEvalCollection(this, HostCompilationCallbacks)
+    return compileAndEvalCollection(this, HostLoadingCallbacks)
 }
