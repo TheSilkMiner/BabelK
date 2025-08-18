@@ -10,9 +10,8 @@ plugins {
 
 rootProject.name = "babelk"
 
+include("library")
 include("script-api")
 include("script-dsl")
 include("script-definition")
 include("script-host")
-include("library")
-include("java9-modular-adapter")
