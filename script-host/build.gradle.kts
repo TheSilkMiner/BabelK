@@ -13,6 +13,8 @@ dependencies {
     implementation(kotlin("scripting-jvm"))
     implementation(kotlin("scripting-jvm-host"))
 
+    implementation(group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core-jvm", version = "1.8.0")
+
     implementation(project(":script-api"))
     implementation(project(":script-definition"))
     implementation(project(":script-dsl"))
