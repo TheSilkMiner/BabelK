@@ -76,7 +76,13 @@ tasks {
                 }
             }
             named<ProcessResources>(sourceSets.main.get().processResourcesTaskName) {
-                from(set.output) { into("META-INF/versions/${this@all.version.get().asInt()}") }
+                from(set.output) {
+                    into("META-INF/versions/${this@all.version.get().asInt()}")
+                    exclude("META-INF/**")
+                }
+                from(set.output) {
+                    include("META-INF/**")
+                }
                 dependsOn(set.output)
             }
         }
