@@ -67,13 +67,12 @@ tasks {
 
         tasks {
             named<JavaCompile>(set.compileJavaTaskName) {
-                javaCompiler = javaToolchains.compilerFor {
-                    languageVersion = this@all.version
-                }
+                javaCompiler = javaToolchains.compilerFor { languageVersion = this@all.version }
             }
             named<KotlinCompile>(set.compileKotlinTaskName) {
                 compilerOptions {
                     jvmTarget = JvmTarget.fromTarget(this@all.version.get().asInt().toString())
+                    kotlinJavaToolchain.toolchain.use(javaToolchains.launcherFor { languageVersion = this@all.version })
                 }
             }
             named<ProcessResources>(sourceSets.main.get().processResourcesTaskName) {
