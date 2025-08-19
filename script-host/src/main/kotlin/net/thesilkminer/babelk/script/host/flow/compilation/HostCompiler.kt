@@ -9,6 +9,10 @@ import net.thesilkminer.babelk.script.host.Log
 import net.thesilkminer.babelk.script.host.interop.Script
 import net.thesilkminer.babelk.script.host.interop.ScriptCollection
 import net.thesilkminer.babelk.script.host.flow.LoadableScript
+import net.thesilkminer.babelk.script.host.flow.extractGrammarNameFromScriptNameOrNull
+import net.thesilkminer.babelk.script.host.flow.isValidGrammarName
+import net.thesilkminer.babelk.script.host.flow.toGrammarClassName
+import net.thesilkminer.babelk.script.host.flow.verifyValidGrammarName
 import net.thesilkminer.babelk.script.host.withinCoroutine
 import java.io.File
 import java.nio.file.Paths
@@ -16,13 +20,21 @@ import java.util.Locale
 import kotlin.reflect.KClass
 import kotlin.script.experimental.api.CompiledScript
 import kotlin.script.experimental.api.ResultWithDiagnostics
+import kotlin.script.experimental.api.ScriptCollectedData
 import kotlin.script.experimental.api.ScriptDiagnostic
+import kotlin.script.experimental.api.asSuccess
+import kotlin.script.experimental.api.defaultIdentifier
+import kotlin.script.experimental.api.foundAnnotations
+import kotlin.script.experimental.api.makeFailureResult
+import kotlin.script.experimental.api.refineConfiguration
 import kotlin.script.experimental.api.valueOr
+import kotlin.script.experimental.api.with
 import kotlin.script.experimental.jvm.dependenciesFromClassContext
 import kotlin.script.experimental.jvm.jvm
 import kotlin.script.experimental.jvm.jvmTarget
 import kotlin.script.experimental.jvmhost.JvmScriptCompiler
 import kotlin.script.experimental.jvmhost.createJvmCompilationConfigurationFromTemplate
+import kotlin.script.experimental.util.PropertiesCollection
 
 private object ContextualReference
 
@@ -41,21 +53,47 @@ internal fun ScriptCollection.compile(): Collection<LoadableScript> {
 
 private fun Script.compile(): LoadableScript {
     log.info { "Compiling script ${this.name}" }
-    val script = this.compileWithResult().reportDiagnostics().rethrowOnError(this)
+    val builtinName = this.extractGrammarNameFromScriptNameOrNull()
+    val script = this.compileWithResult(builtinName).reportDiagnostics().rethrowOnError(this)
     return LoadableCompiledScript(script)
 }
 
-private fun Script.compileWithResult(): ResultWithDiagnostics<CompiledScript> {
-    val compiler = JvmScriptCompiler()
+private fun Script.compileWithResult(builtinGrammarName: String?): ResultWithDiagnostics<CompiledScript> {
+    val compiler = HostScriptCompiler(JvmScriptCompiler())
     val source = ScriptSourceCode(this)
     val configuration = createJvmCompilationConfigurationFromTemplate<GrammarScript> {
+        builtinGrammarName?.let { defaultIdentifier(it.toGrammarClassName()) }
         jvm {
             dependenciesFromClassContext(ContextualReference::class, *libraries)
             jvmTarget("1.8")
         }
+        refineConfiguration.onAnnotations<GrammarName> { (_, configuration, data) ->
+            val annotations = data[ScriptCollectedData.foundAnnotations]?.takeIf { it.isNotEmpty() }?.mapNotNull { it as? GrammarName }
+            if (annotations == null) {
+                configuration.asSuccess()
+            } else {
+                val name = annotations.singleOrNull()?.name
+                if (name == null) {
+                    val diagnostics = ScriptDiagnostic(ScriptDiagnostic.unspecifiedError, "GrammarName annotation is not repeatable")
+                    makeFailureResult(diagnostics)
+                } else if (!name.isValidGrammarName) {
+                    val e = runCatching { name.verifyValidGrammarName() }.exceptionOrNull() ?: error("Internal error")
+                    val diagnostics = ScriptDiagnostic(
+                        ScriptDiagnostic.unspecifiedError,
+                        "Grammar name '$name' is invalid due to ${e.message}",
+                        exception = e
+                    )
+                    makeFailureResult(diagnostics)
+                } else {
+                    configuration.with { defaultIdentifier(name.toGrammarClassName()) }.asSuccess()
+                }
+            }
+        }
     }
     return withinCoroutine { compiler(source, configuration) }
 }
+
+private operator fun <T> ScriptCollectedData?.get(key: PropertiesCollection.Key<T>): T? = this?.let { it[key] }
 
 private fun ResultWithDiagnostics<CompiledScript>.reportDiagnostics(): ResultWithDiagnostics<CompiledScript> {
     this.reports.forEach { (code, message, severity, sourcePath, location, exception) ->

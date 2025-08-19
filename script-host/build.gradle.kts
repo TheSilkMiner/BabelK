@@ -10,6 +10,7 @@ multiRelease {
 
 dependencies {
     implementation(kotlin("scripting-common"))
+    implementation(kotlin("scripting-compiler-embeddable"))
     implementation(kotlin("scripting-jvm"))
     implementation(kotlin("scripting-jvm-host"))
 
