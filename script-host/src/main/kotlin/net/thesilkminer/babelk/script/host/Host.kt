@@ -6,10 +6,11 @@ import net.thesilkminer.babelk.script.host.flow.compileAndEval
 import net.thesilkminer.babelk.script.host.interop.LoadingCallbacks
 import net.thesilkminer.babelk.script.host.interop.ScriptCollection
 import net.thesilkminer.babelk.script.host.interop.ScriptGrammarPack
+import net.thesilkminer.babelk.script.host.script.ScriptEnvironment
 
 fun compileAndEvalCollection(
     collection: ScriptCollection,
     loadingCallbacks: LoadingCallbacks
 ): ScriptGrammarPack {
-    return collection.compileAndEval(loadingCallbacks)
+    return collection.compileAndEval(loadingCallbacks) { ScriptEnvironment.initializeEnvironment(it) { this.toInteroperableDefinition() } }
 }

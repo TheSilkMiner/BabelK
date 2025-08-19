@@ -3,11 +3,17 @@
 package net.thesilkminer.babelk.script.host.flow
 
 import net.thesilkminer.babelk.script.host.flow.compilation.compile
+import net.thesilkminer.babelk.script.host.flow.evaluation.evaluate
+import net.thesilkminer.babelk.script.host.flow.loading.load
 import net.thesilkminer.babelk.script.host.interop.LoadingCallbacks
 import net.thesilkminer.babelk.script.host.interop.ScriptCollection
 import net.thesilkminer.babelk.script.host.interop.ScriptGrammarPack
 
-internal fun ScriptCollection.compileAndEval(callbacks: LoadingCallbacks): ScriptGrammarPack {
+internal fun ScriptCollection.compileAndEval(
+    callbacks: LoadingCallbacks,
+    evalEnvironmentCreator: EvaluationEnvironmentCreator<ScriptGrammarPack, *>
+): ScriptGrammarPack {
     val loadableCollection = this.compile()
-    TODO()
+    val evaluableCollection = loadableCollection.load(callbacks)
+    return evaluableCollection.evaluate(evalEnvironmentCreator)
 }
