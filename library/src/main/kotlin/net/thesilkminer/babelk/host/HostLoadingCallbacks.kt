@@ -25,6 +25,7 @@ internal object HostLoadingCallbacks : LoadingCallbacks {
         private object GrammarStreamHandler : URLStreamHandler() {
             private class GrammarConnection(url: URL) : URLConnection(url) {
                 override fun connect() = Unit
+                override fun getInputStream(): InputStream = this.url.path.let(String::byteInputStream)
             }
 
             override fun openConnection(u: URL?): URLConnection? = u?.let(::GrammarConnection)
