@@ -24,4 +24,8 @@ internal class ScriptCollectionGrammarPack : GrammarPack {
     internal fun getGrammarOrNull(name: String): ScriptFinalizableGrammar? {
         return this.grammarCollection.getOrNull(name) as ScriptFinalizableGrammar?
     }
+
+    internal fun getAllGrammars(): Collection<ScriptFinalizableGrammar> {
+        return this.grammarCollection.getAllValues().map { it as ScriptFinalizableGrammar }
+    }
 }

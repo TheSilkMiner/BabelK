@@ -38,6 +38,7 @@ internal abstract class MapBackedMutableNamedObjectCollection<E : NamedObject, i
     protected abstract fun providerForLookup(name: String, lookup: () -> E): NamedObjectProvider<E>?
 
     internal fun getOrNull(name: String): E? = this.map[name]
+    internal fun getAllValues(): Collection<E> = this.map.values
 
     private fun noElementFound(name: String, delayedLookup: Boolean): Nothing {
         val delayedLookupExplanation = if (delayedLookup) "" else " and delayed lookup is not supported"

@@ -45,5 +45,9 @@ internal class ScriptFinalizableGrammar(private val grammarName: String, private
         return this.rulesCollection.getOrNull(name)
     }
 
+    internal fun getAllRules(): Collection<NamedRule> {
+        return this.rulesCollection.getAllValues()
+    }
+
     override fun toString(): String = "Grammar[name=${this.name},rules=${this.rules}]"
 }
