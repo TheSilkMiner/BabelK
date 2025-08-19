@@ -34,10 +34,11 @@ internal class ScriptFinalizableGrammar(private val grammarName: String, private
         return if (this@ScriptFinalizableGrammar.isFinalized) FinalizedCollection(this.asReadOnlyView()) else this
     }
 
-    internal fun finalize(beforeFinalizationCallback: ThisGrammar.() -> Unit) {
+    internal fun <R> finalize(beforeFinalizationCallback: ThisGrammar.() -> R): R {
         if (this.isFinalized) error("Already finalized -- this should never happen")
-        beforeFinalizationCallback()
+        val result = beforeFinalizationCallback()
         this.isFinalized = true
+        return result
     }
 
     internal fun getRuleOrNull(name: String): NamedRule? {

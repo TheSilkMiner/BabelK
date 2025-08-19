@@ -16,9 +16,9 @@ internal class ScriptCollectionGrammarPack : GrammarPack {
         this.grammarCollection.register(name) { ScriptFinalizableGrammar(name, this) }
     }
 
-    internal fun finalizeGrammar(name: String, block: ThisGrammar.() -> Unit) {
+    internal fun <T> finalizeGrammar(name: String, block: ThisGrammar.() -> T): T {
         val grammar = this.getGrammarOrNull(name) ?: error("Grammar $name cannot be finalized as it was never prepared")
-        grammar.finalize(block)
+        return grammar.finalize(block)
     }
 
     internal fun getGrammarOrNull(name: String): ScriptFinalizableGrammar? {
