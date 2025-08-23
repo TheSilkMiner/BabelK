@@ -1,5 +1,6 @@
 package net.thesilkminer.babelk.host
 
+import net.thesilkminer.babelk.api.Logger
 import net.thesilkminer.babelk.script.api.GrammarName
 import net.thesilkminer.babelk.script.definition.GrammarScript
 import net.thesilkminer.babelk.script.dsl.NamedObjectCollectionGetting
@@ -171,16 +172,22 @@ internal object HostLoadingCallbacks : LoadingCallbacks {
         }
     }
 
+    private val logger = Logger {}
     private val layerId = AtomicInt(0)
 
     override fun setUpClassLoadingFor(scripts: LoadingScriptCollectionData): ClassloadingCallback {
+        this.logger.info { "Setting up classloading for scripts $scripts, using $this" }
+
         val thisClass = this.javaClass
         val thisModule = thisClass.module
         val rootLoader = SimpleScriptClassLoader(scripts, thisClass.classLoader)
 
         if (!thisModule.isNamed) {
+            this.logger.info { "  Environment is non-modular ($thisModule reports unnamed), skipping module integration" }
             return { _, name -> rootLoader.loadClass(name).kotlin }
         }
+
+        this.logger.info { "  Environment is modular (name is reported as ${thisModule.name}), attempting full integration" }
 
         val thisLayer = thisModule.layer
         val thisConfiguration = thisLayer.configuration()
@@ -196,5 +203,5 @@ internal object HostLoadingCallbacks : LoadingCallbacks {
         }
     }
 
-    override fun toString(): String = "HostLoadingCallbacks[Java 9]"
+    override fun toString(): String = "HostLoadingCallbacks (Java 9)"
 }

@@ -1,5 +1,6 @@
 package net.thesilkminer.babelk.host
 
+import net.thesilkminer.babelk.api.Logger
 import net.thesilkminer.babelk.script.host.interop.ClassloadingCallback
 import net.thesilkminer.babelk.script.host.interop.LoadingCallbacks
 import net.thesilkminer.babelk.script.host.interop.LoadingScriptCollectionData
@@ -85,7 +86,11 @@ internal object HostLoadingCallbacks : LoadingCallbacks {
         }
     }
 
+    private val logger = Logger {}
+
     override fun setUpClassLoadingFor(scripts: LoadingScriptCollectionData): ClassloadingCallback {
+        this.logger.info { "Setting up classloading for $scripts, using $this" }
+
         val classLoader = SimpleScriptClassLoader(scripts, this.javaClass.classLoader)
         return { _, name -> classLoader.loadClass(name).kotlin }
     }
