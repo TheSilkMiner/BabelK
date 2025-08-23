@@ -14,4 +14,6 @@ module net.thesilkminer.babelk {
     exports net.thesilkminer.babelk.api.script;
 
     uses net.thesilkminer.babelk.api.LoggerFactory;
+
+    provides net.thesilkminer.babelk.script.host.LogCreator with net.thesilkminer.babelk.host.HostLogCreator;
 }

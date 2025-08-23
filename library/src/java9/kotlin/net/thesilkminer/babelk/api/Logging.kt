@@ -1,6 +1,8 @@
 // ============================ Note ============================
-// This file has been copied 1:1 in the java9 source set. Refer to that file for the reasons, but what is important
-// is ensuring that whatever change is operated on this file is also replicated in the same way on the other.
+// This is meant to be a 1:1 copy of the equivalent file in the main source set to allow Kotlin code in this
+// source set access. The Kotlin compiler offers no --patch-module equivalent command that I could find, so
+// this is the fastest way to fix the issue without relying on undocumented compiler internals. At least
+// until another solution is found, this will remain.
 // ==============================================================
 @file:JvmName("Logging")
 

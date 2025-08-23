@@ -2,19 +2,11 @@
 
 package net.thesilkminer.babelk.script.host
 
-import java.util.concurrent.locks.ReentrantLock
-import kotlin.concurrent.withLock
+import java.util.ServiceLoader
 
 interface LogCreator {
     companion object {
-        private val lock = ReentrantLock()
-
-        var instance: LogCreator? = null
-            get() = this.lock.withLock { field }
-            set(value) = this.lock.withLock {
-                require(field == null) { "Log Creator instance was already set" }
-                field = value
-            }
+        internal val instance by lazy { ServiceLoader.load(LogCreator::class.java).first() }
     }
 
     fun new(name: String): Log
