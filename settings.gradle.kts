@@ -10,6 +10,7 @@ plugins {
 
 rootProject.name = "babelk"
 
+include("cli")
 include("library")
 include("script-api")
 include("script-dsl")

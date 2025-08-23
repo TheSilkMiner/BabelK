@@ -1,3 +1,4 @@
 [versions]
 
 [libraries]
+picocli = { group = "info.picocli", name = "picocli", version = "4.7.7" }
