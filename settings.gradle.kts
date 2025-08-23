@@ -16,3 +16,5 @@ include("script-api")
 include("script-dsl")
 include("script-definition")
 include("script-host")
+
+include("library-all-mp") // TODO("Temporary: figure out if we want to provide this artifact at all")
