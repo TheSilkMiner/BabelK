@@ -13,6 +13,7 @@ import net.thesilkminer.babelk.script.host.flow.rethrowOnError
 import net.thesilkminer.babelk.script.host.interop.ScriptGrammarPack
 import net.thesilkminer.babelk.script.host.withinCoroutine
 import kotlin.script.experimental.api.EvaluationResult
+import kotlin.script.experimental.api.ResultValue
 import kotlin.script.experimental.api.ResultWithDiagnostics
 import kotlin.script.experimental.api.constructorArgs
 import kotlin.script.experimental.api.implicitReceivers
@@ -40,6 +41,7 @@ private fun EvaluableScript.evaluate(environment: EvaluationEnvironment<*, *>) {
     this.evaluateWithResult(environment)
         .reportDiagnostics(log)
         .rethrowOnError(log) { "An error occurred while attempting to evaluate script for grammar ${this.grammarName}: please refer to the log output" }
+        .handleReturnValue()
 }
 
 private fun EvaluableScript.evaluateWithResult(environment: EvaluationEnvironment<*, *>): ResultWithDiagnostics<EvaluationResult> {
@@ -60,4 +62,19 @@ private fun EvaluableScript.evaluateWithResultAndGrammar(name: String): ResultWi
         }
     }
     return withinCoroutine { evaluator(compiledScript, evaluationConfiguration) }
+}
+
+context(_: EvaluableScript)
+private fun EvaluationResult.handleReturnValue() {
+    this.returnValue.handleValue()
+}
+
+context(script: EvaluableScript)
+private fun ResultValue.handleValue() {
+    when (this) {
+        is ResultValue.Error -> throw ScriptEvaluationException(script.grammarName, this.error)
+        ResultValue.NotEvaluated -> error("Script was not evaluated")
+        is ResultValue.Unit -> Unit
+        is ResultValue.Value -> error("Grammar scripts should not evaluate to a value")
+    }
 }
