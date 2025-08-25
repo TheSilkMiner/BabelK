@@ -1,6 +1,7 @@
 package net.thesilkminer.babelk.script.host.flow.compilation
 
 import net.thesilkminer.babelk.script.host.flow.isValidGrammarName
+import net.thesilkminer.babelk.script.host.flow.nameFromGrammarClass
 import org.jetbrains.kotlin.scripting.compiler.plugin.ScriptCompilerProxy
 import kotlin.script.experimental.api.CompiledScript
 import kotlin.script.experimental.api.ResultWithDiagnostics
@@ -19,7 +20,8 @@ internal class HostScriptCompiler(baseDelegate: JvmScriptCompiler) : ScriptCompi
             val result = this.wrapped.compile(script, scriptCompilationConfiguration)
 
             val scriptName = scriptCompilationConfiguration[ScriptCompilationConfiguration.defaultIdentifier]
-            val isValidName = scriptName != null && scriptName != "Script" && scriptName.isValidGrammarName
+            val grammarName = scriptName?.nameFromGrammarClass()
+            val isValidName = scriptName != null && scriptName != "Script" && grammarName != null && grammarName.isValidGrammarName
 
             if (isValidName) {
                 return result

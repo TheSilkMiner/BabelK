@@ -16,7 +16,7 @@ internal fun String.nameFromGrammarClass(): String {
 }
 
 internal fun Script.extractGrammarNameFromScriptNameOrNull(): String? {
-    return runCatching { this.name.also { it.verifyValidGrammarName() } }.getOrNull()
+    return runCatching { this.name.removeScriptSuffix().also { it.verifyValidGrammarName() } }.getOrNull()
 }
 
 internal fun String.verifyValidGrammarName() {
@@ -24,3 +24,5 @@ internal fun String.verifyValidGrammarName() {
 }
 
 internal val String.isValidGrammarName: Boolean get() = this matches grammarNamePattern
+
+private fun String.removeScriptSuffix(): String = this.removeSuffix(".grammar.kts")
