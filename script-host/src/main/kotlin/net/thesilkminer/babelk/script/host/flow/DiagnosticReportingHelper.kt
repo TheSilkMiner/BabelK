@@ -17,7 +17,7 @@ internal fun <R> ResultWithDiagnostics<R>.reportDiagnostics(log: Log): ResultWit
                 append("  [")
                 append(severity.name.let { "${it[0]}${it.substring(1).lowercase(Locale.ENGLISH)}" })
                 append(" 0x")
-                append(code.toString(radix = 16).padStart(16, '0'))
+                append(code.toULong().toString(radix = 16).padStart(16, '0'))
                 append(']')
 
                 if (sourcePath != null) {
