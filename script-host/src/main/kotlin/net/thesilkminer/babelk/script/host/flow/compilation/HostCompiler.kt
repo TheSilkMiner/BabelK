@@ -15,6 +15,7 @@ import net.thesilkminer.babelk.script.host.flow.reportDiagnostics
 import net.thesilkminer.babelk.script.host.flow.rethrowOnError
 import net.thesilkminer.babelk.script.host.flow.toGrammarClassName
 import net.thesilkminer.babelk.script.host.flow.verifyValidGrammarName
+import net.thesilkminer.babelk.script.host.hack.setUpSourceCodeEditingToWorkAroundKtsCompilerBugs
 import net.thesilkminer.babelk.script.host.withinCoroutine
 import java.nio.file.Paths
 import kotlin.reflect.KClass
@@ -22,6 +23,7 @@ import kotlin.script.experimental.api.CompiledScript
 import kotlin.script.experimental.api.ResultWithDiagnostics
 import kotlin.script.experimental.api.ScriptCollectedData
 import kotlin.script.experimental.api.ScriptDiagnostic
+import kotlin.script.experimental.api.SourceCode
 import kotlin.script.experimental.api.asSuccess
 import kotlin.script.experimental.api.defaultIdentifier
 import kotlin.script.experimental.api.foundAnnotations
@@ -59,7 +61,7 @@ private fun Script.compile(): LoadableScript {
 
 private fun Script.compileWithResult(builtinGrammarName: String?): ResultWithDiagnostics<CompiledScript> {
     val compiler = HostScriptCompiler(JvmScriptCompiler())
-    val source = ScriptSourceCode(this)
+    val source = this.obtainSourceCode()
     val configuration = createJvmCompilationConfigurationFromTemplate<GrammarScript> {
         builtinGrammarName?.let { defaultIdentifier(it.toGrammarClassName()) }
         jvm {
@@ -90,6 +92,11 @@ private fun Script.compileWithResult(builtinGrammarName: String?): ResultWithDia
         }
     }
     return withinCoroutine { compiler(source, configuration) }
+}
+
+private fun Script.obtainSourceCode(): SourceCode {
+    val raw = ScriptSourceCode(this)
+    return raw.setUpSourceCodeEditingToWorkAroundKtsCompilerBugs()
 }
 
 private operator fun <T> ScriptCollectedData?.get(key: PropertiesCollection.Key<T>): T? = this?.let { it[key] }
