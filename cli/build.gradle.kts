@@ -24,7 +24,6 @@ dependencies {
 }
 
 tasks.named<JavaCompile>(sourceSets["java9"].compileJavaTaskName) {
-    options.javaModuleVersion = "${project.version}"
     sourceSets.main
         .map { it.output.classesDirs.files.joinToString(prefix = "${project.group}.cli=", separator = File.pathSeparator) }
         .let { options.compilerArgumentProviders.add { listOf("--patch-module", it.get()) }}

@@ -67,6 +67,7 @@ tasks {
 
         tasks {
             named<JavaCompile>(set.compileJavaTaskName) {
+                options.javaModuleVersion = "${project.version}"
                 javaCompiler = javaToolchains.compilerFor { languageVersion = this@all.version }
             }
             named<KotlinCompile>(set.compileKotlinTaskName) {
