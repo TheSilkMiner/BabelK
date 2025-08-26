@@ -102,7 +102,9 @@ private class CliLogger(private val name: String, private val minLevel: LogLevel
             }
 
             val commonFrames = thisStack.lastIndex - (lastDivergingBetweenIndex ?: -1)
-            target += "$indent... $commonFrames more"
+            if (commonFrames > 0) {
+                target += "$indent... $commonFrames more"
+            }
 
             this.appendAllEnclosed(target, seen, indent)
         }
