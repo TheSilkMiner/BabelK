@@ -28,7 +28,7 @@ import java.util.Optional
 import java.util.stream.Stream
 import kotlin.concurrent.atomics.AtomicInt
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
-import kotlin.concurrent.atomics.fetchAndIncrement
+import kotlin.concurrent.atomics.incrementAndFetch
 import kotlin.io.encoding.Base64
 import kotlin.jvm.optionals.getOrNull
 import kotlin.streams.asStream
@@ -103,7 +103,7 @@ internal object HostLoadingCallbacks : LoadingCallbacks {
         override fun findAll(): Set<ModuleReference> = this.references.values.toSet()
     }
 
-    private class SimpleScriptClassLoader(scripts: LoadingScriptCollectionData, parent: ClassLoader) : ClassLoader(parent) {
+    private class SimpleScriptClassLoader(id: Int, scripts: LoadingScriptCollectionData, parent: ClassLoader) : ClassLoader("grammars#$id", parent) {
         private class ClassData(val bytes: ByteArray, val grammarName: String) {
             operator fun component1(): ByteArray = this.bytes
             operator fun component2(): String = this.grammarName
@@ -180,7 +180,8 @@ internal object HostLoadingCallbacks : LoadingCallbacks {
 
         val thisClass = this.javaClass
         val thisModule = thisClass.module
-        val rootLoader = SimpleScriptClassLoader(scripts, thisClass.classLoader)
+        val id = layerId.incrementAndFetch()
+        val rootLoader = SimpleScriptClassLoader(id, scripts, thisClass.classLoader)
 
         if (!thisModule.isNamed) {
             this.logger.info { "  Environment is non-modular ($thisModule reports unnamed), skipping module integration" }
@@ -191,7 +192,6 @@ internal object HostLoadingCallbacks : LoadingCallbacks {
 
         val thisLayer = thisModule.layer
         val thisConfiguration = thisLayer.configuration()
-        val id = layerId.fetchAndIncrement()
         val finder = ScriptModuleFinder(scripts, id)
         val allModules = finder.allNames
         val configuration = Configuration.resolveAndBind(finder, listOf(thisConfiguration), ModuleFinder.of(), allModules)
