@@ -32,7 +32,7 @@ internal fun <R> ResultWithDiagnostics<R>.reportDiagnostics(log: Log): ResultWit
                     append(location.start.col)
                 }
 
-                append(':')
+                append(": ")
                 append(message)
 
                 if (exception != null) {
