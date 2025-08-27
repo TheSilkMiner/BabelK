@@ -13,4 +13,5 @@ dependencies {
     implementation(kotlin("scripting-jvm"))
 
     implementation(project(":script-api"))
+    compileOnly(project(":script-dsl")) // Needed for in-IDE autocompletion
 }

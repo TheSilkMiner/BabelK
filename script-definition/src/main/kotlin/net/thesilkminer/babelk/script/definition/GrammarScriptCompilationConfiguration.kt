@@ -2,8 +2,11 @@ package net.thesilkminer.babelk.script.definition
 
 import net.thesilkminer.babelk.script.api.grammar.ThisGrammar
 import kotlin.reflect.typeOf
+import kotlin.script.experimental.api.ScriptAcceptedLocation
 import kotlin.script.experimental.api.ScriptCompilationConfiguration
+import kotlin.script.experimental.api.acceptedLocations
 import kotlin.script.experimental.api.defaultImports
+import kotlin.script.experimental.api.ide
 import kotlin.script.experimental.api.implicitReceivers
 
 internal object GrammarScriptCompilationConfiguration : ScriptCompilationConfiguration({
@@ -16,6 +19,9 @@ internal object GrammarScriptCompilationConfiguration : ScriptCompilationConfigu
         "net.thesilkminer.babelk.script.api.provider.*",
         "net.thesilkminer.babelk.script.dsl.*",
     )
+    ide {
+        acceptedLocations(ScriptAcceptedLocation.Everywhere)
+    }
 }) {
     @Suppress("unused") private fun readResolve(): Any = GrammarScriptCompilationConfiguration
 }
