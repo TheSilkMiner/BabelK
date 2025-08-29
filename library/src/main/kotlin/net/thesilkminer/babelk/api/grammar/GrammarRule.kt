@@ -1,22 +1,24 @@
 package net.thesilkminer.babelk.api.grammar
 
-import net.thesilkminer.babelk.api.invoke.RandomSource
+import net.thesilkminer.babelk.api.invoke.InvocationConfiguration
+import net.thesilkminer.babelk.api.invoke.InvocationConfigurationDsl
 import net.thesilkminer.babelk.api.invoke.RuleInvocationSequence
-import net.thesilkminer.babelk.api.invoke.RuleInvocationSequenceType
+import java.util.function.Consumer
 
 interface GrammarRule {
     val name: String
-    operator fun invoke(rng: RandomSource, sequenceType: RuleInvocationSequenceType, arguments: Map<String, String>): RuleInvocationSequence
+    operator fun invoke(configuration: InvocationConfiguration): RuleInvocationSequence
 
-    operator fun invoke(rng: RandomSource, sequenceType: RuleInvocationSequenceType, vararg arguments: Pair<String, String>): RuleInvocationSequence {
-        return this.invokeWithArguments(rng, sequenceType, arguments)
+    @JvmSynthetic
+    operator fun invoke(builderConfiguration: InvocationConfigurationDsl.() -> Unit): RuleInvocationSequence {
+        return this.invokeCreatingConfiguration(builderConfiguration)
     }
 
-    operator fun invoke(rng: RandomSource, arguments: Map<String, String>): RuleInvocationSequence {
-        return this.invokeDefaultSequenceType(rng, arguments)
+    operator fun invoke(builderConfiguration: Consumer<in InvocationConfigurationDsl>): RuleInvocationSequence {
+        return this.invokeCreatingConfigurationForJava(builderConfiguration)
     }
 
-    operator fun invoke(rng: RandomSource, vararg arguments: Pair<String, String>): RuleInvocationSequence {
-        return this.invokeWithArguments(rng, arguments)
+    operator fun invoke(): RuleInvocationSequence {
+        return this.invokeWithDefaults()
     }
 }
