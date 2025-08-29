@@ -65,6 +65,14 @@ internal fun Console.raiseError(errorMessage: String) {
     this.rawError("! $errorMessage")
 }
 
+@Suppress("UnusedReceiverParameter")
+internal fun Console.raiseException(throwable: Throwable, errorMessage: String) {
+    // TODO("Move logger formatting to a common method and use the same formatting here")
+    // TODO("Alternatively, move logger to use Console directly for exception formatting")
+    val logger = CliLoggerFactory().newLogger("Shell")
+    logger.error(throwable) { errorMessage }
+}
+
 internal fun Console.raw(message: String, newLine: Boolean = true) {
     this.printOn(Console.Stream.OUTPUT, message, newLine)
 }

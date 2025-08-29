@@ -6,6 +6,7 @@ import net.thesilkminer.babelk.api.script.ScriptFile
 import net.thesilkminer.babelk.api.script.toScriptBundle
 import net.thesilkminer.babelk.cli.Console
 import net.thesilkminer.babelk.cli.answer
+import net.thesilkminer.babelk.cli.raiseException
 import net.thesilkminer.babelk.cli.yesNo
 import picocli.CommandLine
 import java.nio.file.Path
@@ -73,11 +74,18 @@ internal class LoadGrammarCommand(environment: BabelkInteractiveEnvironment) : B
         }
 
         val bundle = this.files.toBundle()
-        val pack = bundle.compileToGrammarPack()
+        this.compile(bundle)
+    }
 
-        this.environment.withGrammarPacks { it[name] = pack }
-
-        Console.answer("Successfully loaded grammar pack named '$name'")
+    private fun compile(bundle: ScriptBundle) {
+        runCatching { bundle.compileToGrammarPack() }
+            .onSuccess { pack ->
+                this@LoadGrammarCommand.environment.withGrammarPacks { it[name] = pack }
+                Console.answer("Successfully loaded grammar pack named '$name'")
+            }
+            .onFailure {
+                Console.raiseException(it, "Unable to load grammar pack named '$name' due to ${it.message}")
+            }
     }
 
     private fun Collection<FileCollectionEntry>.toBundle(): ScriptBundle {

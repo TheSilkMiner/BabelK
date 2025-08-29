@@ -1,6 +1,7 @@
 package net.thesilkminer.babelk.cli.interactive
 
-import net.thesilkminer.babelk.cli.CliLoggerFactory
+import net.thesilkminer.babelk.cli.Console
+import net.thesilkminer.babelk.cli.raiseException
 
 internal sealed class BabelkInteractiveCommand(protected val environment: BabelkInteractiveEnvironment) : Runnable {
     final override fun run() {
@@ -10,8 +11,6 @@ internal sealed class BabelkInteractiveCommand(protected val environment: Babelk
     abstract fun execute()
 
     private fun reportFailure(throwable: Throwable) {
-        // Leverage logger factory to use the same formatting
-        val logger = CliLoggerFactory().newLogger("Shell")
-        logger.error(throwable) { "An error occurred when executing the target command" }
+        Console.raiseException(throwable, "An error occurred when executing the target command")
     }
 }
