@@ -7,6 +7,7 @@ import net.thesilkminer.babelk.api.grammar.GrammarPack
 import net.thesilkminer.babelk.api.script.ScriptBundle
 import net.thesilkminer.babelk.script.host.compileAndEvalCollection
 import net.thesilkminer.babelk.script.host.interop.ScriptCollection
+import net.thesilkminer.babelk.script.host.interop.ScriptCompilationException
 import net.thesilkminer.babelk.script.host.interop.ScriptGrammarPack
 
 private val logger = Logger {}
@@ -23,5 +24,12 @@ internal fun ScriptBundle.compile(): GrammarPack {
 
 private fun ScriptCollection.compileAndEval(): ScriptGrammarPack {
     logger.info { "Compiling and evaluating script collection" }
-    return compileAndEvalCollection(this, HostLoadingCallbacks)
+    try {
+        return compileAndEvalCollection(this, HostLoadingCallbacks)
+    } catch (e: ScriptCompilationException) {
+        throw net.thesilkminer.babelk.api.ScriptCompilationException(
+            "Script collection $this could not be compiled into a GrammarPack",
+            e
+        )
+    }
 }

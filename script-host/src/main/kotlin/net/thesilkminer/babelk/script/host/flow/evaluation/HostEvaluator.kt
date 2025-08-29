@@ -27,7 +27,9 @@ internal fun Collection<EvaluableScript>.evaluate(environmentCreator: Evaluation
     log.info { this.joinToString(prefix = "Evaluating ${this.count()} scripts, corresponding to grammars named [", postfix = "]") { it.grammarName } }
 
     val environment = environmentCreator(this)
-    this.forEach { it.evaluate(environment) }
+    val results = this.map { it.evaluate(environment) }
+
+    results.verifyResultsAndRethrow()
 
     log.info { "Finalizing generated grammar pack" }
     return environment.finalize()
@@ -37,8 +39,8 @@ private operator fun <T, G : ThisGrammar> EvaluationEnvironmentCreator<T, G>.inv
     return this(collection.map(EvaluableScript::grammarName))
 }
 
-private fun EvaluableScript.evaluate(environment: EvaluationEnvironment<*, *>) {
-    this.evaluateWithResult(environment)
+private fun EvaluableScript.evaluate(environment: EvaluationEnvironment<*, *>): Result<Unit> {
+    return this.evaluateWithResult(environment)
         .reportDiagnostics(log)
         .rethrowOnError(log) { "An error occurred while attempting to evaluate script for grammar ${this.grammarName}: please refer to the log output" }
         .handleReturnValue()
@@ -65,16 +67,22 @@ private fun EvaluableScript.evaluateWithResultAndGrammar(name: String): ResultWi
 }
 
 context(_: EvaluableScript)
-private fun EvaluationResult.handleReturnValue() {
-    this.returnValue.handleValue()
+private fun EvaluationResult.handleReturnValue(): Result<Unit> {
+    return this.returnValue.handleValue()
 }
 
 context(script: EvaluableScript)
-private fun ResultValue.handleValue() {
-    when (this) {
-        is ResultValue.Error -> throw ScriptEvaluationException(script.grammarName, this.error)
-        ResultValue.NotEvaluated -> error("Script was not evaluated")
-        is ResultValue.Unit -> Unit
+private fun ResultValue.handleValue(): Result<Unit> {
+    return when (this) {
+        is ResultValue.Unit -> Result.success(Unit)
+        is ResultValue.Error -> Result.failure(ScriptEvaluationException(script.grammarName, this.error))
         is ResultValue.Value -> error("Grammar scripts should not evaluate to a value")
+        ResultValue.NotEvaluated -> error("Script was not evaluated")
     }
+}
+
+private fun Collection<Result<Unit>>.verifyResultsAndRethrow() {
+    this.mapNotNull(Result<*>::exceptionOrNull)
+        .reduceOrNull { original, additional -> original.also { it.addSuppressed(additional) } }
+        ?.let { throw it }
 }
