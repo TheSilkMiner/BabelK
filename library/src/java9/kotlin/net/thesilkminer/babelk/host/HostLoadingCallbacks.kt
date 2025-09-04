@@ -30,7 +30,8 @@ import kotlin.concurrent.atomics.AtomicInt
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
 import kotlin.concurrent.atomics.incrementAndFetch
 import kotlin.io.encoding.Base64
-import kotlin.jvm.optionals.getOrNull
+import kotlin.jvm.optionals.getOrElse
+import kotlin.reflect.KClass
 import kotlin.streams.asStream
 
 @OptIn(ExperimentalAtomicApi::class)
@@ -59,9 +60,27 @@ internal object HostLoadingCallbacks : LoadingCallbacks {
                     override fun close() = Unit
                 }
 
-                private val apiModule by lazy { GrammarName::class.java.module.name }
-                private val defModule by lazy { GrammarScript::class.java.module.name }
-                private val dslModule by lazy { NamedObjectCollectionGetting::class.java.module.name }
+                private interface ModuleListDsl {
+                    companion object {
+                        private class ListBuilder(private val list: MutableList<String>) : ModuleListDsl {
+                            override fun KClass<*>.unaryPlus() {
+                                this@ListBuilder.list += this.java.module.name ?: error("${this.qualifiedName} is in the unnamed module")
+                            }
+                        }
+
+                        fun moduleList(block: ModuleListDsl.() -> Unit): Collection<String> {
+                            return buildList { ListBuilder(this).block() }
+                        }
+                    }
+
+                    operator fun KClass<*>.unaryPlus()
+                }
+
+                private val modules by modules {
+                    +GrammarName::class
+                    +GrammarScript::class
+                    +NamedObjectCollectionGetting::class
+                }
 
                 fun forScript(script: LoadingScriptData, id: Int): ScriptModuleReference =
                     ScriptModuleReference(script.descriptor(id), script.location) { script.reader }
@@ -70,9 +89,7 @@ internal object HostLoadingCallbacks : LoadingCallbacks {
                     get() = {
                         ModuleDescriptor.newModule(this.grammarName)
                             .version("$it")
-                            .requires(apiModule)
-                            .requires(defModule)
-                            .requires(dslModule)
+                            .requires(modules)
                             .exports(this.allPackages)
                             .build()
                     }
@@ -89,8 +106,15 @@ internal object HostLoadingCallbacks : LoadingCallbacks {
                         .map { it.substringBeforeLast('/').replace('/', '.') }
                         .toSet()
 
+                private fun ModuleDescriptor.Builder.requires(modules: Iterable<String>): ModuleDescriptor.Builder =
+                    modules.fold(this) { accumulator, module -> accumulator.requires(module) }
+
                 private fun ModuleDescriptor.Builder.exports(packages: Iterable<String>): ModuleDescriptor.Builder =
                     packages.fold(this) { accumulator, pack -> accumulator.exports(pack) }
+
+                private fun modules(block: ModuleListDsl.() -> Unit): Lazy<Iterable<String>> {
+                    return lazy { ModuleListDsl.moduleList(block) }
+                }
             }
 
             override fun open(): ModuleReader = this.readerCreator()
@@ -198,7 +222,7 @@ internal object HostLoadingCallbacks : LoadingCallbacks {
         val controller = ModuleLayer.defineModules(configuration, listOf(thisLayer)) { rootLoader }
         val layer = controller.layer()
         return { grammar, name ->
-            val module = layer.findModule(grammar).getOrNull() ?: error("Grammar name $grammar was not found in layer $layer")
+            val module = layer.findModule(grammar).getOrElse { error("Grammar name $grammar was not found in layer $layer") }
             module.classLoader.loadClass(name).kotlin
         }
     }
