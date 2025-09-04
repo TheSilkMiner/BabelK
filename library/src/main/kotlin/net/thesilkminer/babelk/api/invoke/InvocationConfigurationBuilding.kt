@@ -2,9 +2,32 @@
 
 package net.thesilkminer.babelk.api.invoke
 
+import net.thesilkminer.babelk.api.grammar.GrammarRule
 import java.util.function.Consumer
 
 private const val WRITE_ONLY_PROPERTY = "This property can only be written to and its value cannot be read directly within the DSL"
+
+typealias StackOverflowCallback = (rule: GrammarRule, error: StackOverflowError?) -> CharSequence?
+
+object BuiltinStackOverflowCallbacks {
+    @get:JvmName("throwException")
+    @get:JvmStatic
+    val throwException: StackOverflowCallback = { rule, error ->
+        throw InvocationStackOverflowException(rule, "Stack overflowed during rule invocation", error)
+    }
+
+    @get:JvmName("replaceWithName")
+    @get:JvmStatic
+    val replaceWithName: StackOverflowCallback = { rule, _ -> rule.name }
+
+    @get:JvmName("ignore")
+    @get:JvmStatic
+    val ignore: StackOverflowCallback = { _, _ -> null }
+
+    @get:JvmName("ignoreOrRethrow")
+    @get:JvmStatic
+    val ignoreOrRethrow: StackOverflowCallback = { _, error -> error?.let { throw it } }
+}
 
 interface SequenceConfigurationDsl {
     @get:Deprecated(level = DeprecationLevel.HIDDEN, message = WRITE_ONLY_PROPERTY)
@@ -14,6 +37,8 @@ interface SequenceConfigurationDsl {
     @get:Deprecated(level = DeprecationLevel.HIDDEN, message = WRITE_ONLY_PROPERTY)
     @get:JvmSynthetic
     var stackDepth: Int
+
+    fun onStackOverflow(callback: StackOverflowCallback)
 }
 
 interface InvocationConfigurationDsl {
@@ -77,7 +102,8 @@ private class ConfigurationBuilder : InvocationConfigurationBuilder, SequenceCon
         override val randomSource: RandomSource,
         override val ruleArguments: Map<String, String>,
         override val stackDepth: Int,
-        override val type: RuleInvocationSequenceType
+        override val type: RuleInvocationSequenceType,
+        override val onStackOverflow: (GrammarRule, StackOverflowError?) -> CharSequence?
     ) : InvocationConfiguration, InvocationConfiguration.SequenceConfiguration {
         override val sequenceConfiguration: InvocationConfiguration.SequenceConfiguration get() = this
     }
@@ -87,6 +113,7 @@ private class ConfigurationBuilder : InvocationConfigurationBuilder, SequenceCon
     override var randomSource: RandomSource = RandomSource
 
     private val arguments: MutableMap<String, String> = mutableMapOf()
+    private var stackOverflowCallback: StackOverflowCallback = BuiltinStackOverflowCallbacks.throwException
 
     override fun sequence(block: SequenceConfigurationDsl.() -> Unit) {
         this.block()
@@ -109,12 +136,17 @@ private class ConfigurationBuilder : InvocationConfigurationBuilder, SequenceCon
         this.arguments { arguments.forEach { (key, value) -> put(key, value) } }
     }
 
+    override fun onStackOverflow(callback: StackOverflowCallback) {
+        this.stackOverflowCallback = callback
+    }
+
     override fun build(): InvocationConfiguration {
         return Configuration(
             randomSource = this.randomSource,
             ruleArguments = this.arguments.toMap(),
             stackDepth = this.stackDepth,
-            type = this.type
+            type = this.type,
+            onStackOverflow = this.stackOverflowCallback
         )
     }
 }
