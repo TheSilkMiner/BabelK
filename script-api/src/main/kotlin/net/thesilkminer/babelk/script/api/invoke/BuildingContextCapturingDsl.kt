@@ -6,13 +6,21 @@ package net.thesilkminer.babelk.script.api.invoke
 // for raw implementation of rules, rather than only for scripts
 
 interface BuildingContextCaptureDsl {
+    var invocationMode: CaptureInvocationMode
+    var stackOverflowMode: CaptureStackOverflowMode
+
     fun capture(block: (context: BuildingContext) -> Unit)
     fun andThen(block: BuildingContext.(events: BuildingEventList) -> Unit)
 }
 
-private class ContextCapture(private val context: BuildingContext, private val mode: CaptureMode) : BuildingContextCaptureDsl {
+private class ContextCapture(private val context: BuildingContext, mode: CaptureMode) : BuildingContextCaptureDsl {
+    override var invocationMode: CaptureInvocationMode = mode.invocationMode
+    override var stackOverflowMode: CaptureStackOverflowMode = mode.stackOverflowMode
+
     private var capture: ((BuildingContext) -> Unit)? = null
     private var andThen: (BuildingContext.(BuildingEventList) -> Unit)? = null
+
+    private val mode: CaptureMode get() = CaptureMode(this.invocationMode, this.stackOverflowMode)
 
     override fun capture(block: (context: BuildingContext) -> Unit) {
         require(this.capture == null) { "Capture function has already been provided" }
@@ -35,7 +43,7 @@ private class ContextCapture(private val context: BuildingContext, private val m
     }
 }
 
-fun BuildingContext.capturing(mode: CaptureMode = CaptureMode.RECURSE, block: BuildingContextCaptureDsl.() -> Unit) {
+fun BuildingContext.capturing(mode: CaptureMode = CaptureMode(), block: BuildingContextCaptureDsl.() -> Unit) {
     ContextCapture(this, mode).apply(block)()
 }
 
