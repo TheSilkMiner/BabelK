@@ -17,6 +17,7 @@ internal object GrammarScriptCompilationConfiguration : ScriptCompilationConfigu
         "net.thesilkminer.babelk.script.api.grammar.*",
         "net.thesilkminer.babelk.script.api.invoke.*",
         "net.thesilkminer.babelk.script.api.provider.*",
+        "net.thesilkminer.babelk.script.api.rules.*",
         "net.thesilkminer.babelk.script.dsl.*",
     )
     ide {
