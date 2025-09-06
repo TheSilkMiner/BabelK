@@ -1,10 +1,11 @@
 package net.thesilkminer.babelk.script.host.script.collection
 
 import net.thesilkminer.babelk.script.api.NamedObject
+import net.thesilkminer.babelk.script.api.collection.BuilderContext
 import net.thesilkminer.babelk.script.api.collection.MutableNamedObjectCollection
 import net.thesilkminer.babelk.script.api.provider.NamedObjectProvider
 
-internal abstract class MapBackedMutableNamedObjectCollection<E : NamedObject, in B> : MutableNamedObjectCollection<E, B> {
+internal abstract class MapBackedMutableNamedObjectCollection<E : NamedObject, in B, C : BuilderContext> : MutableNamedObjectCollection<E, B, C> {
     protected class SimpleNamedObjectProvider<T : NamedObject>(override val name: String, private val obj: T) : NamedObjectProvider<T> {
         override fun get(): T = this.obj
         override fun toString(): String = "Provider[${this.name}=${this.obj}]"
@@ -12,9 +13,10 @@ internal abstract class MapBackedMutableNamedObjectCollection<E : NamedObject, i
 
     private val map = mutableMapOf<String, E>()
 
-    final override fun register(name: String, creator: () -> B): NamedObjectProvider<E> {
+    final override fun register(name: String, creator: C.() -> B): NamedObjectProvider<E> {
         require(name !in this.map) { "An object was already registered for name '$name' in the current collection: ${this.getOrNull(name)}" }
-        val obj = creator().toNamedObject(name)
+        val ctx = this.contextForObject(name)
+        val obj = ctx.creator().toNamedObject(name)
         this.map[name] = obj
         return this.providerForObject(name, obj)
     }
@@ -33,6 +35,7 @@ internal abstract class MapBackedMutableNamedObjectCollection<E : NamedObject, i
         this.noElementFound(name, false)
     }
 
+    protected abstract fun contextForObject(name: String): C
     protected abstract fun B.toNamedObject(name: String): E
     protected abstract fun providerForObject(name: String, obj: E): NamedObjectProvider<E>
     protected abstract fun providerForLookup(name: String, lookup: () -> E): NamedObjectProvider<E>?

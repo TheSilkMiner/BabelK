@@ -3,6 +3,7 @@
 package net.thesilkminer.babelk.script.dsl
 
 import net.thesilkminer.babelk.script.api.NamedObject
+import net.thesilkminer.babelk.script.api.collection.BuilderContext
 import net.thesilkminer.babelk.script.api.collection.MutableNamedObjectCollection
 import net.thesilkminer.babelk.script.api.collection.NamedObjectCollection
 import net.thesilkminer.babelk.script.api.provider.Provider
@@ -19,10 +20,10 @@ private class NamedObjectCollectionGettingDelegate<out E : NamedObject>(
     override operator fun provideDelegate(thisRef: Any?, property: KProperty<*>): Provider<E> = this.collection.byName(this.name ?: property.name)
 }
 
-private class NamedObjectCollectionRegisteringDelegate<out E : NamedObject, in B>(
-    private val collection: MutableNamedObjectCollection<E, B>,
+private class NamedObjectCollectionRegisteringDelegate<out E : NamedObject, in B, out C : BuilderContext>(
+    private val collection: MutableNamedObjectCollection<E, B, C>,
     private val name: String?,
-    private val creator: () -> B
+    private val creator: C.() -> B
 ) : NamedObjectCollectionRegistering<E> {
     override operator fun provideDelegate(thisRef: Any?, property: KProperty<*>): Provider<E> = this.collection.register(this.name ?: property.name, this.creator)
 }
@@ -38,6 +39,9 @@ fun <E : NamedObject> NamedObjectCollection<E>.getting(name: String? = null): Na
     return NamedObjectCollectionGettingDelegate(this, name)
 }
 
-fun <E : NamedObject, B> MutableNamedObjectCollection<E, B>.registering(name: String? = null, creator: () -> B): NamedObjectCollectionRegistering<E> {
+fun <E : NamedObject, B, C : BuilderContext> MutableNamedObjectCollection<E, B, C>.registering(
+    name: String? = null,
+    creator: C.() -> B
+): NamedObjectCollectionRegistering<E> {
     return NamedObjectCollectionRegisteringDelegate(this, name, creator)
 }

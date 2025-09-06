@@ -2,13 +2,14 @@ package net.thesilkminer.babelk.script.host.script.collection
 
 import net.thesilkminer.babelk.script.api.grammar.NamedRule
 import net.thesilkminer.babelk.script.api.grammar.Rule
+import net.thesilkminer.babelk.script.api.grammar.RuleBuilderContext
 import net.thesilkminer.babelk.script.api.invoke.BuildingContext
 import net.thesilkminer.babelk.script.api.invoke.InvocationArguments
 import net.thesilkminer.babelk.script.api.invoke.RandomSource
 import net.thesilkminer.babelk.script.api.invoke.RuleState
 import net.thesilkminer.babelk.script.api.provider.NamedObjectProvider
 
-internal class GrammarRuleNamedObjectCollection : MapBackedMutableNamedObjectCollection<NamedRule, Rule>() {
+internal class GrammarRuleNamedObjectCollection : MapBackedMutableNamedObjectCollection<NamedRule, Rule, RuleBuilderContext>() {
     private class SimpleNamedRule(override val name: String, private val rule: Rule) : NamedRule {
         override fun append(context: BuildingContext, state: RuleState, rng: RandomSource, arguments: InvocationArguments) {
             // We are not going to add one more indirection layer as we are merely wrapping the rule to make it named
@@ -28,6 +29,12 @@ internal class GrammarRuleNamedObjectCollection : MapBackedMutableNamedObjectCol
         }
 
         override fun toString(): String = "${this.name} -> delayed lookup"
+    }
+
+    private object Context : RuleBuilderContext
+
+    override fun contextForObject(name: String): RuleBuilderContext {
+        return Context
     }
 
     override fun Rule.toNamedObject(name: String): NamedRule {

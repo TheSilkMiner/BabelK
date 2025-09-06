@@ -13,7 +13,7 @@ internal class ScriptCollectionGrammarPack : GrammarPack {
     override fun toString(): String = "GrammarPack[grammars=${this.grammars}]"
 
     internal fun prepareNewGrammar(name: String) {
-        this.grammarCollection.register(name) { ScriptFinalizableGrammar(name, this) }
+        this.grammarCollection.register(name) { ScriptFinalizableGrammar(name, this@ScriptCollectionGrammarPack) }
     }
 
     internal fun <T> finalizeGrammar(name: String, block: ThisGrammar.() -> T): T {
