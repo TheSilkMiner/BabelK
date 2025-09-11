@@ -17,6 +17,8 @@ interface RandomSource {
         override fun nextFloat(): Float = this.random.nextFloat()
         override fun nextFloatInRange(beginning: Float, end: Float): Float = this.random.nextFloatInRange(beginning, end)
         override fun nextBytes(count: Int): ByteArray = this.random.nextBytes(count)
+
+        override fun toString(): String = this.random.toString()
     }
 
     fun nextBits(bits: Int): Int
