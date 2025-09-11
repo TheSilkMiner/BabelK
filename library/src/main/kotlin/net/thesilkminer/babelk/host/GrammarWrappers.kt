@@ -7,6 +7,7 @@ import net.thesilkminer.babelk.api.grammar.GrammarPack
 import net.thesilkminer.babelk.api.grammar.GrammarRule
 import net.thesilkminer.babelk.api.invoke.InvocationConfiguration
 import net.thesilkminer.babelk.api.invoke.RuleInvocationSequence
+import net.thesilkminer.babelk.createInvocationSequence
 import net.thesilkminer.babelk.script.api.grammar.NamedRule
 import net.thesilkminer.babelk.script.host.interop.ScriptGrammar
 import net.thesilkminer.babelk.script.host.interop.ScriptGrammarPack
@@ -15,7 +16,7 @@ private class HostProvidedNamedGrammarRule(private val rule: NamedRule) : Gramma
     override val name: String get() = this.rule.name
 
     override fun invoke(configuration: InvocationConfiguration): RuleInvocationSequence {
-        TODO("Not yet implemented")
+        return createInvocationSequence(this, configuration) { this.rule(this, it) }
     }
 
     override fun toString(): String = this.rule.toString()
