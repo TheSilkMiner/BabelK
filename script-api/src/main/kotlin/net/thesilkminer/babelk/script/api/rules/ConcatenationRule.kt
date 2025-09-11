@@ -8,15 +8,22 @@ import net.thesilkminer.babelk.script.api.invoke.RandomSource
 import net.thesilkminer.babelk.script.api.invoke.RuleState
 import kotlin.collections.forEach
 
-class ConcatenationRule(private val rules: List<InvokableRule>): Rule {
-    constructor(vararg rules: InvokableRule) : this(rules.toList())
-    constructor(first: InvokableRule, second: InvokableRule) : this(listOf(first, second))
+class ConcatenationRule(private val rules: List<InvokableRule>, private val separator: InvokableRule? = null): Rule {
+    constructor(vararg rules: InvokableRule, separator: InvokableRule? = null) : this(rules.toList(), separator)
+    constructor(first: InvokableRule, second: InvokableRule, separator: InvokableRule? = null) : this(listOf(first, second), separator)
     constructor(first: InvokableRule) : this(listOf(first))
     constructor(): this(listOf())
 
     override fun append(context: BuildingContext, state: RuleState, rng: RandomSource, arguments: InvocationArguments) {
-        this.rules.forEach(context::invoke)
+        var isFirst = true
+        this.rules.forEach {
+            if (!isFirst && this.separator != null) {
+                context.invoke(this.separator)
+            }
+            isFirst = false
+            context.invoke(it)
+        }
     }
 
-    override fun toString(): String = "Concatenation[${this.rules}]"
+    override fun toString(): String = "Concatenation{${this.separator}}[${this.rules}]"
 }
