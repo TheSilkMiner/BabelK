@@ -14,6 +14,9 @@ class ConcatenationRule(private val rules: List<InvokableRule>, private val sepa
     constructor(first: InvokableRule) : this(listOf(first))
     constructor(): this(listOf())
 
+    fun appendRule(rule: InvokableRule): ConcatenationRule = ConcatenationRule(this.rules + rule, this.separator)
+    fun replaceSeparator(separator: InvokableRule?): ConcatenationRule = ConcatenationRule(this.rules, separator)
+
     override fun append(context: BuildingContext, state: RuleState, rng: RandomSource, arguments: InvocationArguments) {
         var isFirst = true
         this.rules.forEach {
