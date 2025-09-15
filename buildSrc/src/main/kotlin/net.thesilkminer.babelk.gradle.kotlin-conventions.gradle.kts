@@ -10,6 +10,10 @@ plugins {
 
 group = "net.thesilkminer.babelk"
 
+base {
+    archivesName.convention(provider { "${rootProject.name}-${project.name}" })
+}
+
 kotlin {
     jvmToolchain(8)
     compilerOptions {
