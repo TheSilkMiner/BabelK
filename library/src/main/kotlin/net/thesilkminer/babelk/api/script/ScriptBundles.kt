@@ -5,6 +5,7 @@ package net.thesilkminer.babelk.api.script
 import java.nio.charset.Charset
 import java.nio.file.Path
 import kotlin.io.path.PathWalkOption
+import kotlin.io.path.div
 import kotlin.io.path.isDirectory
 import kotlin.io.path.isRegularFile
 import kotlin.io.path.listDirectoryEntries
@@ -64,14 +65,22 @@ fun Path.toScriptBundle(
         return ScriptBundle(this.toScriptFile())
     }
 
-    val nameAssignmentFunction = nameAssignmentFunction ?: { null }
+    val actualAssignmentFunction = nameAssignmentFunction ?: { null }
     return this.listOrWalk(recurse)
         .filter { it.isRegularFile() }
         .filter { !filterOnlyScripts || "${it.fileName}".endsWith(EXPECTED_SCRIPT_FILE_EXT) }
         .map { it.relativeTo(this) }
-        .map { it.toScriptFile(name = nameAssignmentFunction(it), charset = charset) }
+        .map { it.toScriptFileWithRoot(this, charset, actualAssignmentFunction) }
         .let { ScriptBundle(Iterable { it.iterator() }) }
 }
 
 private fun Path.listOrWalk(recurse: Boolean): Sequence<Path> =
     if (recurse) this.walk(PathWalkOption.INCLUDE_DIRECTORIES) else this.listDirectoryEntries().asSequence()
+
+private fun Path.toScriptFileWithRoot(root: Path, charset: Charset, nameAssignmentFunction: (Path) -> String?): ScriptFile {
+    val unrelativizedPath = root / this
+    return unrelativizedPath.toScriptFile(
+        name = nameAssignmentFunction(this) ?: this.toScriptFile().name, // Leverage existing name-determining algorithm
+        charset = charset
+    )
+}
