@@ -17,6 +17,7 @@ internal class BabelkInteractiveEnvironment {
                 .mixinStandardHelpOptions(false)
                 .addSubcommand(LoadGrammarCommand(environment))
                 .addSubcommand(ExitGrammarCommand(environment))
+                .addSubcommand(ShowGrammarCommand(environment))
 
             val currentSubcommands = spec.subcommands().toMap()
 
