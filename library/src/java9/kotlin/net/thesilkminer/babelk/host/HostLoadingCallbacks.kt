@@ -32,6 +32,7 @@ import kotlin.concurrent.atomics.incrementAndFetch
 import kotlin.io.encoding.Base64
 import kotlin.jvm.optionals.getOrElse
 import kotlin.reflect.KClass
+import kotlin.reflect.full.NoSuchPropertyException
 import kotlin.streams.asStream
 
 @OptIn(ExperimentalAtomicApi::class)
@@ -77,9 +78,11 @@ internal object HostLoadingCallbacks : LoadingCallbacks {
                 }
 
                 private val modules by modules {
-                    +GrammarName::class
-                    +GrammarScript::class
-                    +NamedObjectCollectionGetting::class
+                    +GrammarName::class // script-api
+                    +GrammarScript::class // script-definition
+                    +NamedObjectCollectionGetting::class // script-dsl
+                    +KClass::class // kotlin-stdlib
+                    +NoSuchPropertyException::class // kotlin-reflect
                 }
 
                 fun forScript(script: LoadingScriptData, id: Int): ScriptModuleReference =
