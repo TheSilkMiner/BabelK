@@ -17,6 +17,7 @@ internal class BabelkInteractiveEnvironment {
                 .name("")
                 .mixinStandardHelpOptions(false)
                 .addSubcommand(ExitGrammarCommand(environment))
+                .addSubcommand(InvokeGrammarCommand(environment))
                 .addSubcommand(LoadGrammarCommand(environment))
                 .addSubcommand(PrimeGrammarCommand(environment))
                 .addSubcommand(ShowGrammarCommand(environment))
