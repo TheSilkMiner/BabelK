@@ -1,6 +1,7 @@
 package net.thesilkminer.babelk.cli.interactive
 
 import net.thesilkminer.babelk.api.grammar.GrammarPack
+import net.thesilkminer.babelk.api.invoke.RuleInvocationSequence
 import net.thesilkminer.babelk.cli.Console
 import net.thesilkminer.babelk.cli.answer
 import net.thesilkminer.babelk.cli.cliVersion
@@ -15,8 +16,9 @@ internal class BabelkInteractiveEnvironment {
             val spec = CommandLine.Model.CommandSpec.create()
                 .name("")
                 .mixinStandardHelpOptions(false)
-                .addSubcommand(LoadGrammarCommand(environment))
                 .addSubcommand(ExitGrammarCommand(environment))
+                .addSubcommand(LoadGrammarCommand(environment))
+                .addSubcommand(PrimeGrammarCommand(environment))
                 .addSubcommand(ShowGrammarCommand(environment))
 
             val currentSubcommands = spec.subcommands().toMap()
@@ -44,6 +46,7 @@ internal class BabelkInteractiveEnvironment {
     }
 
     private val loadedPacks = mutableMapOf<String, GrammarPack>()
+    private val primedSequences = mutableMapOf<String, RuleInvocationSequence>()
     private val commandLineCreator = createCommandLineBuilder(this)
     private var terminate = false
 
@@ -55,6 +58,10 @@ internal class BabelkInteractiveEnvironment {
 
     internal fun <R> withGrammarPacks(block: (packs: MutableMap<String, GrammarPack>) -> R): R {
         return block(this.loadedPacks)
+    }
+
+    internal fun <R> withPrimedSequences(block: (sequences: MutableMap<String, RuleInvocationSequence>) -> R): R {
+        return block(this.primedSequences)
     }
 
     internal fun terminateShell() {
