@@ -8,7 +8,10 @@ import java.util.Locale
 @CommandLine.Command(name = "show", aliases = ["list"])
 internal class ShowGrammarCommand(environment: BabelkInteractiveEnvironment) : BabelkInteractiveCommand(environment) {
     private enum class ObjectType(private val aliases: Set<String>) {
-        GRAMMAR("grammars");
+        PACKS("packs"),
+        GRAMMARS("grammars"),
+        RULES("rules"),
+        SEQUENCES("sequences", "invocations");
 
         constructor(vararg grammars: String) : this(grammars.toSet())
         @Suppress("UNUSED") constructor() : this(error("At least one alias must be specified") as Set<String>)
@@ -34,14 +37,43 @@ internal class ShowGrammarCommand(environment: BabelkInteractiveEnvironment) : B
     )
     private lateinit var objectType: ObjectType
 
+    // TODO("in option (e.g. show grammars --in test)")
+
     override fun execute() {
         Console.answer("Listing all objects of type ${this.objectType}")
         when (this.objectType) {
-            ObjectType.GRAMMAR -> this.listGrammars()
+            ObjectType.PACKS -> this.listMapKeys { this::withGrammarPacks }
+            ObjectType.GRAMMARS -> this.listMapKeys { { this.withGrammarNames(it) } }
+            ObjectType.RULES -> this.listMapKeys { { this.withRuleNames(it) } }
+            ObjectType.SEQUENCES -> this.listMapKeys { this::withPrimedSequences }
         }
     }
 
-    private fun listGrammars() {
-        this.environment.withGrammarPacks { it.keys.forEach { name -> Console.answer("- $name") } }
+    private fun <T> listMapKeys(mapProvider: BabelkInteractiveEnvironment.() -> ((MutableMap<String, T>) -> Unit) -> Unit) {
+        this.environment.mapProvider().invoke { it.keys.forEach { name -> Console.answer("- $name") } }
+    }
+
+    private fun BabelkInteractiveEnvironment.withGrammarNames(block: (MutableMap<String, Unit>) -> Unit) {
+        return this.withGrammarPacks { packs ->
+            packs.entries
+                .asSequence()
+                .flatMap { (name, pack) -> pack.grammars.asSequence().map { "${it.name} (in pack $name)" } }
+                .associateWithTo(mutableMapOf()) {}
+                .let(block)
+        }
+    }
+
+    private fun BabelkInteractiveEnvironment.withRuleNames(block: (MutableMap<String, Unit>) -> Unit) {
+        return this.withGrammarPacks { packs ->
+            packs.entries
+                .asSequence()
+                .flatMap { (name, pack) ->
+                    pack.grammars
+                        .asSequence()
+                        .flatMap { grammar -> grammar.rules.asSequence().map { "${grammar.name}:${it.name} (in pack $name)" } }
+                }
+                .associateWithTo(mutableMapOf()) {}
+                .let(block)
+        }
     }
 }
