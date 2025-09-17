@@ -8,11 +8,15 @@ private const val SCRIPT_PREFIX = "babelk.scripting.grammars"
 
 private val grammarNamePattern = Regex("[a-zA-Z0-9][a-zA-Z0-9_/ ]*")
 
-internal fun String.toGrammarClassName(): String = "$SCRIPT_PREFIX.$this.$this"
+internal fun String.toGrammarClassName(): String {
+    val packageName = this.replace('/', '.')
+    val grammarName = packageName.substringAfterLast('.')
+    return "$SCRIPT_PREFIX.$packageName.$grammarName"
+}
 
 internal fun String.nameFromGrammarClass(): String {
     require(this.startsWith(SCRIPT_PREFIX)) { "Invalid class name $this" }
-    return this.removePrefix("$SCRIPT_PREFIX.").substringBefore('.')
+    return this.removePrefix("$SCRIPT_PREFIX.").substringBeforeLast('.').replace('.', '/')
 }
 
 internal fun Script.extractGrammarNameFromScriptNameOrNull(): String? {

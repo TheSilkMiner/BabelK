@@ -90,12 +90,15 @@ internal object HostLoadingCallbacks : LoadingCallbacks {
 
                 private val LoadingScriptData.descriptor: (Int) -> ModuleDescriptor
                     get() = {
-                        ModuleDescriptor.newModule(this.grammarName)
+                        ModuleDescriptor.newModule(this.modularName)
                             .version("$it")
                             .requires(modules)
                             .exports(this.allPackages)
                             .build()
                     }
+
+                private val LoadingScriptData.modularName: String
+                    get() = this.grammarName.replace('/', '.')
 
                 private val LoadingScriptData.location: URI
                     get() = URI.create("babelk-grammar:${this.grammarName}")
@@ -225,7 +228,8 @@ internal object HostLoadingCallbacks : LoadingCallbacks {
         val controller = ModuleLayer.defineModules(configuration, listOf(thisLayer)) { rootLoader }
         val layer = controller.layer()
         return { grammar, name ->
-            val module = layer.findModule(grammar).getOrElse { error("Grammar name $grammar was not found in layer $layer") }
+            val moduleName = grammar.replace('/', '.')
+            val module = layer.findModule(moduleName).getOrElse { error("Grammar name $grammar was not found in layer $layer (module name: $moduleName)") }
             module.classLoader.loadClass(name).kotlin
         }
     }
